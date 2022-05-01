@@ -22,18 +22,11 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "? This job's status is ${{ job.status }}."
-
-      - name: Finding files and store to output
-        id: finding-files
-        run: |
-          echo "::set-output name=FILELIST::$(find . -name '*.md' -print)"
-
-      - name: Processing my found files from output
-        run: |
-          IFS="," read -a myarray <<< ${{ steps.finding-files.outputs.FILELIST }}
-          for i in "${myarray[@]}"; do
-            file_path=$(dirname "${i}")
-            file_name=$(basename "${i}")
-            cd file_path
-            cat file_name
-          done      
+      - name: Hello world action step
+        uses: bradhuang9999/markdown-to-html-action # Uses an action in the root directory
+        id: hello
+        with:
+          who-to-greet: 'Mona the Octocat'
+      # Use the output from the `hello` step
+      - name: Get the output time
+        run: echo "The time was ${{ steps.hello.outputs.time }}"
