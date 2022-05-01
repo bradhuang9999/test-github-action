@@ -21,7 +21,7 @@ jobs:
           ls ${{ github.workspace }}
       - run: echo "? This job's status is ${{ job.status }}."
       - name: Hello world action step
-        uses: bradhuang9999/markdown-to-html-action@v0.1.1-alpha # Uses an action in the root directory 
+        uses: bradhuang9999/markdown-to-html-action@v0.1.2-alpha # Uses an action in the root directory 
         id: hello
         with:
           who-to-greet: 'Mona the Octocat'
