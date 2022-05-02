@@ -1,28 +1,55 @@
-name: GitHub Actions Demo
+# This is a basic workflow to help you get started with Actions
+
+name: ConvertToHTML
+
+# Controls when the workflow will run
 on:
+  # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches:
-      - "main"
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  Explore-GitHub-Actions:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - run: echo "? The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "? This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "? The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v3
-      - run: echo "? The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "?️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls -lR ${{ github.workspace }}
-      - run: echo "? This job's status is ${{ job.status }}."
-      - name: Hello world action step
-        uses: bradhuang9999/markdown-to-html-action@v0.1.3-alpha # Uses an action in the root directory 
-        id: hello
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      # Runs a set of commands using the runners shell
+      - name: Read README file
+        id: getreadme
+        run: echo "::set-output name=readme::$(cat README.md)"
+
+      - name: Markdown to HTML
+        uses: lifepal/markdown-to-html@v1.2
+        id: tohtml
         with:
-          who-to-greet: 'Mona the Octocat'
-      # Use the output from the `hello` step
-      - name: Get the output time
-        run: echo "The time was ${{ steps.hello.outputs.time }}"
+          text: ${{ steps.getreadme.outputs.readme }}
+     
+      - name: create and commit files
+        id: commit
+        run: |
+          rm index.html
+          echo "${{ steps.getreadme.outputs.readme }}" > index.html
+          git config --local user.email "action@github.com"
+          git config --local user.name "github-actions"
+          git add --all
+          git commit -m "auto-build html" -a
+          echo "::set-output name=push::true"
+        shell: bash
+      
+      - name: Push changes
+        if: steps.commit.outputs.push == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+           github_token: ${{ secrets.GITHUB_TOKEN }}
